@@ -1,0 +1,14 @@
+{
+  "name": "Climate AI Temperature Regression Model",
+  "version": "1.0",
+  "unit": "celsius",
+  "coefficients": {
+    "temperature": 0.72,
+    "humidity": -0.025,
+    "windSpeed": -0.04,
+    "rainfall": -0.12,
+    "pressure": 0.002
+  },
+  "intercept": 5.0,
+  "confidence": 87
+}
