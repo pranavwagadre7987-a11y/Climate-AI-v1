@@ -1,6 +1,7 @@
 
 import { useState } from "react";
-import { RotateCw } from "lucide-react";
+import { LoaderCircle, RotateCw } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import {
   LineChart,
   Line,
@@ -38,6 +39,8 @@ function App() {
 
   const [prediction, setPrediction] =
     useState<PredictionResult | null>(null);
+  const [submittedTemperature, setSubmittedTemperature] =
+    useState<number | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [aiError, setAiError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -73,6 +76,7 @@ function App() {
       press > 1200
     ) {
       setPrediction(null);
+      setSubmittedTemperature(null);
       setAiAnalysis(null);
       setAiError("");
       setError(
@@ -83,6 +87,8 @@ function App() {
 
     setLoading(true);
     setError("");
+    setPrediction(null);
+    setSubmittedTemperature(null);
     setAiAnalysis(null);
     setAiError("");
 
@@ -129,6 +135,7 @@ function App() {
             ? data.message
             : undefined,
       });
+      setSubmittedTemperature(temp);
       setAiAnalysis(
         typeof result.aiAnalysis === "string" && result.aiAnalysis.trim()
           ? result.aiAnalysis
@@ -148,6 +155,8 @@ function App() {
         ? err.message
         : "Unable to connect to the Climate AI server.";
       setError(message);
+      setPrediction(null);
+      setSubmittedTemperature(null);
       setAiError("AI analysis could not be retrieved. Check the backend connection and retry.");
     } finally {
       setLoading(false);
@@ -219,10 +228,9 @@ function App() {
       </section>
 
       <section className="panel predictor">
-        <h2>AI temperature prediction</h2>
+        <h2>Environmental measurements</h2>
         <p>
-          Enter environmental measurements to request a
-          prediction from your Climate AI backend.
+          Enter measurements to calculate a formula-based estimate and request an AI interpretation. The estimate is not a weather forecast.
         </p>
 
         <div className="form-grid">
@@ -302,7 +310,7 @@ function App() {
           onClick={predict}
           disabled={loading}
         >
-          {loading ? "Generating insights..." : "Generate environmental insights"}
+          {loading ? "Analyzing measurements..." : "Calculate estimate and analyze"}
         </button>
 
         {error && (
@@ -325,28 +333,43 @@ function App() {
         </div>
 
         <div className="insights-layout">
-          <article className="insight-block estimate-block" aria-live="polite">
-            <span className="insight-label">Formula-based temperature estimate</span>
-            {prediction ? (
-              <>
-                <p className="estimate-value">
-                  {prediction.predictedTemperature.toFixed(1)}{prediction.unit}
-                </p>
+          <article className="insight-block temperature-block" aria-live="polite">
+            <h3>Temperature results</h3>
+            <div className="temperature-values">
+              <section className="temperature-value">
+                <h4>Measured Temperature</h4>
+                {submittedTemperature !== null ? (
+                  <p className="estimate-value">{submittedTemperature.toFixed(1)} °C</p>
+                ) : (
+                  <p className="insight-placeholder">Appears after a successful request.</p>
+                )}
+                <p className="insight-note">The temperature value supplied in the submitted measurements; not a live sensor reading.</p>
+              </section>
+              <section className="temperature-value estimate-value-block">
+                <h4>Formula-Based Temperature Estimate</h4>
+                {prediction ? (
+                  <p className="estimate-value">{prediction.predictedTemperature.toFixed(1)} {prediction.unit}</p>
+                ) : (
+                  <p className="insight-placeholder">Appears after a successful request.</p>
+                )}
                 <p className="insight-note">
-                  {prediction.message || "Calculated from configured coefficients; not a trained forecast."}
+                  {prediction?.message || "Calculated using the project's configured formula and coefficients. It is not a trained, validated weather forecast."}
                 </p>
-              </>
-            ) : (
-              <p className="insight-placeholder">Your estimate will appear after submitting measurements.</p>
-            )}
+              </section>
+            </div>
           </article>
 
           <article className="insight-block analysis-block" aria-live="polite" aria-busy={loading}>
-            <span className="insight-label">Environmental analysis</span>
+            <h3>AI Environmental Interpretation</h3>
             {loading ? (
-              <p className="analysis-status" role="status">Analyzing the submitted measurements...</p>
+              <p className="analysis-status" role="status">
+                <LoaderCircle className="loading-spinner" size={18} aria-hidden="true" />
+                Analyzing the submitted measurements...
+              </p>
             ) : aiAnalysis ? (
-              <p className="analysis-text">{aiAnalysis}</p>
+              <div className="analysis-markdown">
+                <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
+              </div>
             ) : aiError ? (
               <div className="ai-error" role="status">
                 <p>{aiError}</p>

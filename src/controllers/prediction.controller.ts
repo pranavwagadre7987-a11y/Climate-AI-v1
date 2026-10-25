@@ -31,6 +31,8 @@ function getAiErrorMessage(error: unknown): string {
       return "AI analysis is rate-limited right now. Please retry shortly.";
     case "timeout":
       return "AI analysis took too long to respond. Please retry.";
+    case "incomplete":
+      return "AI analysis did not complete all five report sections. Your formula-based estimate is available; retry for the full interpretation.";
     default:
       return "AI analysis is temporarily unavailable. Please retry.";
   }

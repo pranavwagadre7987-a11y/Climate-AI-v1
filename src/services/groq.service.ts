@@ -8,7 +8,35 @@ export type GroqAnalysisErrorKind =
   | "invalid_key"
   | "rate_limited"
   | "timeout"
+  | "incomplete"
   | "unavailable";
+
+const requiredSections = [
+  "Measurement Interpretation",
+  "Environmental Summary",
+  "Potential Environmental Concerns",
+  "Practical Recommendations",
+  "Limitations"
+];
+
+function normalizeHeading(line: string): string {
+  return line.trim()
+    .replace(/^#+\s*/, "")
+    .replace(/^(?:[A-E]|\d+)[.)]\s*/, "")
+    .replace(/^\*+|\*+$/g, "")
+    .replace(/^(?:[A-E]|\d+)[.)]\s*/, "")
+    .replace(/:$/, "")
+    .trim()
+    .toLowerCase();
+}
+
+function hasAllRequiredSections(analysis: string): boolean {
+  const headings = analysis.split(/\r?\n/).map(normalizeHeading);
+
+  return requiredSections.every((section) =>
+    headings.includes(section.toLowerCase())
+  );
+}
 
 export class GroqAnalysisError extends Error {
   constructor(readonly kind: GroqAnalysisErrorKind) {
@@ -40,7 +68,7 @@ export async function analyzeEnvironment(
         {
           role: "system",
           content:
-            "You are Climate AI, an environmental monitoring assistant for a college EVS project. Give a concise, student-friendly analysis with four headings: Measurement interpretation, Possible environmental implications, Suggested monitoring actions, and Limitations and uncertainty. Only interpret the supplied readings. Do not invent sensor readings, claim unverified weather events, provide numerical forecasts, or create confidence percentages. These measurements alone cannot establish a reliable future temperature forecast. Distinguish possible implications from verified observations."
+            "You are Climate AI, an environmental monitoring assistant for a college Environmental Studies project. Return a concise report in Markdown with exactly these five headings: Measurement Interpretation, Environmental Summary, Potential Environmental Concerns, Practical Recommendations, and Limitations. In Measurement Interpretation, explain all five supplied values with their units. In Environmental Summary, distinguish the readings (observations) from interpretations. Mention concerns and recommendations only when reasonably supported by the readings; qualify uncertainty. Do not infer pollution, health risks, hazardous conditions, extreme weather, climate change, location, or causes without supporting data. Do not invent measurements, sensor readings, history, or future conditions. Never provide a numerical forecast, confidence percentage, or model accuracy. In Limitations, state that one set of measurements cannot establish a reliable weather forecast, long-term climate trend, air quality level, or cause of environmental changes, and clarify that the separate formula-based estimate is not a trained or validated forecast. Keep each section brief and educational."
         },
         {
           role: "user",
@@ -52,14 +80,29 @@ Wind speed: ${input.windSpeed} km/h
 Rainfall: ${input.rainfall} mm
 Atmospheric pressure: ${input.pressure} hPa
 
-Keep the analysis grounded in these values. Do not present the configured numerical estimate as a verified weather forecast.`
+Keep the analysis grounded in these supplied values and units. Do not present the configured formula-based temperature estimate as an AI forecast or verified weather forecast.`
         }
       ],
-      max_completion_tokens: 400
+      max_completion_tokens: 1200
     });
 
-    analysis = completion.choices[0]?.message?.content;
+    const choice = completion.choices[0];
+    if (!choice) {
+      throw new GroqAnalysisError("unavailable");
+    }
+    if (choice.finish_reason === "length") {
+      throw new GroqAnalysisError("incomplete");
+    }
+    if (choice.finish_reason !== "stop") {
+      throw new GroqAnalysisError("unavailable");
+    }
+
+    analysis = choice.message?.content;
   } catch (error) {
+    if (error instanceof GroqAnalysisError) {
+      throw error;
+    }
+
     const status =
       typeof error === "object" && error !== null && "status" in error
         ? error.status
@@ -89,6 +132,9 @@ Keep the analysis grounded in these values. Do not present the configured numeri
 
   if (!analysis || typeof analysis !== "string") {
     throw new GroqAnalysisError("unavailable");
+  }
+  if (!hasAllRequiredSections(analysis)) {
+    throw new GroqAnalysisError("incomplete");
   }
 
   return analysis;

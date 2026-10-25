@@ -41,6 +41,8 @@ curl -X POST http://localhost:5000/api/prediction \
 
 The response contains `data` for the numerical estimate, `aiAnalysis` for the environmental interpretation, and `aiError` when the AI service is unavailable. Input units are °C, %, km/h, mm, and hPa. The endpoint validates values before running either service. A missing or failed Groq configuration does not prevent the numerical estimate from being returned.
 
+Accepted sanity-check ranges are temperature -90 to 60 °C, humidity 0 to 100%, wind speed 0 to 500 km/h, rainfall 0 to 1000 mm, and pressure 300 to 1200 hPa. These are broad input-validation bounds, not warning thresholds or claims that readings within them are safe.
+
 ## Model limitations
 
 The current numerical estimate is calculated from fixed coefficients in `ml/model/temperature-model.json`. The repository contains no training pipeline or evaluation data proving those coefficients were learned from a dataset, so this is not a genuinely trained or validated ML model and its estimate is not a reliable weather forecast. A genuine ML implementation would require representative labeled observations, a documented training and validation process, evaluation against held-out data and a baseline, and a versioned model artifact with measured metrics. Groq provides explanations only; it does not produce the numerical estimate.
