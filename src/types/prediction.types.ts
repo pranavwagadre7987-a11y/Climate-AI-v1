@@ -9,6 +9,5 @@ export interface PredictionInput {
 export interface PredictionResponse {
   predictedTemperature: number;
   unit: "°C";
-  confidence: number;
   message: string;
 }

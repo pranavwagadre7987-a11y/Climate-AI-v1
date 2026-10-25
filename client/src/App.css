@@ -204,6 +204,118 @@ input {
   margin-top: 8px;
 }
 
+.insights-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.insights-header .eyebrow {
+  margin: 0 0 8px;
+}
+
+.insights-header h2 {
+  margin-bottom: 8px;
+}
+
+.insights-header > div > p:last-child {
+  color: #71847e;
+  line-height: 1.6;
+}
+
+.insights-label {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  color: #087b60;
+  background: #edf8f1;
+  border: 1px solid #c9e8d5;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.insights-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.6fr);
+  gap: 16px;
+}
+
+.insight-block {
+  min-width: 0;
+  padding: 20px;
+  background: #f8fbf8;
+  border: 1px solid #e0ebe5;
+  border-radius: 8px;
+}
+
+.insight-label {
+  color: #365b51;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.estimate-value {
+  margin: 16px 0 10px;
+  color: #087b60;
+  font-size: 38px;
+  font-weight: 750;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.insight-note,
+.insight-placeholder,
+.analysis-status,
+.analysis-text,
+.ai-error p {
+  color: #58746a;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.insight-placeholder,
+.analysis-status {
+  margin-top: 12px;
+}
+
+.analysis-text {
+  margin-top: 12px;
+  white-space: pre-wrap;
+}
+
+.ai-error {
+  margin-top: 12px;
+  padding: 14px;
+  background: #fff8e8;
+  border: 1px solid #edd9a7;
+  border-radius: 6px;
+}
+
+.retry-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 9px 12px;
+  color: #145c48;
+  background: white;
+  border: 1px solid #a9cbb8;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retry-button:hover {
+  background: #edf8f1;
+}
+
+.retry-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .error {
   color: #922c2c;
   background: #fff0f0;
@@ -247,5 +359,14 @@ footer {
 
   .chart {
     height: 240px;
+  }
+
+  .insights-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .insights-layout {
+    grid-template-columns: 1fr;
   }
 }

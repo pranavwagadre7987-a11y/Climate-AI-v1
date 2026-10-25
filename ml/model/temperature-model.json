@@ -1,5 +1,5 @@
 {
-  "name": "Climate AI Temperature Regression Model",
+  "name": "Climate AI Temperature Estimate Coefficients",
   "version": "1.0",
   "unit": "celsius",
   "coefficients": {
@@ -9,6 +9,5 @@
     "rainfall": -0.12,
     "pressure": 0.002
   },
-  "intercept": 5.0,
-  "confidence": 87
+  "intercept": 5.0
 }

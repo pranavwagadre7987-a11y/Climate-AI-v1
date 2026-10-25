@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { RotateCw } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -11,7 +12,7 @@ import {
 } from "recharts";
 import "./App.css";
 
-const API_URL = "http://localhost:5000/api/prediction";
+const API_URL = "/api/prediction";
 
 const readings = [
   { time: "8 AM", temp: 24 },
@@ -25,7 +26,6 @@ const readings = [
 type PredictionResult = {
   predictedTemperature: number;
   unit?: string;
-  confidence?: number;
   message?: string;
 };
 
@@ -38,6 +38,8 @@ function App() {
 
   const [prediction, setPrediction] =
     useState<PredictionResult | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [aiError, setAiError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -59,22 +61,30 @@ function App() {
       !Number.isFinite(wind) ||
       !Number.isFinite(rain) ||
       !Number.isFinite(press) ||
-      temp < -100 ||
-      temp > 70 ||
+      temp < -90 ||
+      temp > 60 ||
       humid < 0 ||
       humid > 100 ||
       wind < 0 ||
+      wind > 500 ||
       rain < 0 ||
-      press <= 0
+      rain > 1000 ||
+      press < 300 ||
+      press > 1200
     ) {
       setPrediction(null);
-      setError("Please enter valid values for all environmental fields.");
+      setAiAnalysis(null);
+      setAiError("");
+      setError(
+        "Use temperature -90 to 60 °C, humidity 0 to 100%, wind 0 to 500 km/h, rainfall 0 to 1000 mm, and pressure 300 to 1200 hPa."
+      );
       return;
     }
 
     setLoading(true);
     setError("");
-    setPrediction(null);
+    setAiAnalysis(null);
+    setAiError("");
 
     try {
       const response = await fetch(API_URL, {
@@ -114,23 +124,31 @@ function App() {
       setPrediction({
         predictedTemperature: predictedValue,
         unit: data.unit || "°C",
-        confidence:
-          typeof data.confidence === "number"
-            ? data.confidence
-            : undefined,
         message:
           typeof data.message === "string"
             ? data.message
             : undefined,
       });
+      setAiAnalysis(
+        typeof result.aiAnalysis === "string" && result.aiAnalysis.trim()
+          ? result.aiAnalysis
+          : null
+      );
+      setAiError(
+        typeof result.aiError === "string" && result.aiError.trim()
+          ? result.aiError
+          : result.aiAnalysis
+            ? ""
+            : "AI analysis was not included in the server response."
+      );
     } catch (err) {
       console.error("Prediction error:", err);
 
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to connect to the Climate AI server."
-      );
+      const message = err instanceof Error
+        ? err.message
+        : "Unable to connect to the Climate AI server.";
+      setError(message);
+      setAiError("AI analysis could not be retrieved. Check the backend connection and retry.");
     } finally {
       setLoading(false);
     }
@@ -216,6 +234,8 @@ function App() {
               onChange={(event) =>
                 setTemperature(event.target.value)
               }
+              min="-90"
+              max="60"
               step="0.1"
             />
           </label>
@@ -243,6 +263,7 @@ function App() {
                 setWindSpeed(event.target.value)
               }
               min="0"
+              max="500"
               step="0.1"
             />
           </label>
@@ -256,6 +277,7 @@ function App() {
                 setRainfall(event.target.value)
               }
               min="0"
+              max="1000"
               step="0.1"
             />
           </label>
@@ -268,7 +290,8 @@ function App() {
               onChange={(event) =>
                 setPressure(event.target.value)
               }
-              min="1"
+              min="300"
+              max="1200"
               step="0.1"
             />
           </label>
@@ -279,7 +302,7 @@ function App() {
           onClick={predict}
           disabled={loading}
         >
-          {loading ? "Predicting..." : "Predict temperature"}
+          {loading ? "Generating insights..." : "Generate environmental insights"}
         </button>
 
         {error && (
@@ -289,30 +312,60 @@ function App() {
           </div>
         )}
 
-        {prediction && (
-          <div className="result" aria-live="polite">
-            <span>Predicted temperature</span>
-            <h2>
-              {prediction.predictedTemperature.toFixed(1)}
-              {prediction.unit}
-            </h2>
+      </section>
 
-            {prediction.confidence !== undefined && (
-              <p>
-                Server-reported confidence:{" "}
-                {prediction.confidence}%
-              </p>
-            )}
-
-            {prediction.message && (
-              <small>{prediction.message}</small>
-            )}
-
-            <small>
-              Result returned by the Climate AI prediction API.
-            </small>
+      <section className="panel insights-panel" aria-labelledby="insights-title">
+        <div className="insights-header">
+          <div>
+            <p className="eyebrow">MEASUREMENTS, EXPLAINED</p>
+            <h2 id="insights-title">AI Environmental Insights</h2>
+            <p>Numerical estimate and Groq-generated interpretation of your measurements.</p>
           </div>
-        )}
+          <span className="insights-label">Groq analysis</span>
+        </div>
+
+        <div className="insights-layout">
+          <article className="insight-block estimate-block" aria-live="polite">
+            <span className="insight-label">Formula-based temperature estimate</span>
+            {prediction ? (
+              <>
+                <p className="estimate-value">
+                  {prediction.predictedTemperature.toFixed(1)}{prediction.unit}
+                </p>
+                <p className="insight-note">
+                  {prediction.message || "Calculated from configured coefficients; not a trained forecast."}
+                </p>
+              </>
+            ) : (
+              <p className="insight-placeholder">Your estimate will appear after submitting measurements.</p>
+            )}
+          </article>
+
+          <article className="insight-block analysis-block" aria-live="polite" aria-busy={loading}>
+            <span className="insight-label">Environmental analysis</span>
+            {loading ? (
+              <p className="analysis-status" role="status">Analyzing the submitted measurements...</p>
+            ) : aiAnalysis ? (
+              <p className="analysis-text">{aiAnalysis}</p>
+            ) : aiError ? (
+              <div className="ai-error" role="status">
+                <p>{aiError}</p>
+                <button
+                  className="retry-button"
+                  type="button"
+                  onClick={predict}
+                  disabled={loading}
+                  aria-label="Retry AI analysis"
+                >
+                  <RotateCw size={16} aria-hidden="true" />
+                  Retry AI analysis
+                </button>
+              </div>
+            ) : (
+              <p className="insight-placeholder">Submit measurements to generate an interpretation, monitoring suggestions, and uncertainty notes.</p>
+            )}
+          </article>
+        </div>
       </section>
 
       <footer>

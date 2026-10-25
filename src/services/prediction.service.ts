@@ -13,7 +13,6 @@ interface Model {
     pressure: number;
   };
   intercept: number;
-  confidence: number;
 }
 
 export function predictTemperature(input: PredictionInput) {
@@ -45,8 +44,7 @@ export function predictTemperature(input: PredictionInput) {
   return {
     predictedTemperature: temperature,
     unit: "°C",
-    confidence: model.confidence,
     message:
-      "Temperature prediction generated using the Climate AI regression model."
+      "Formula-based estimate using configured coefficients; not a trained or validated forecast."
   };
 }
