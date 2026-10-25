@@ -1,6 +1,15 @@
 
 import { useState } from "react";
-import { LoaderCircle, RotateCw } from "lucide-react";
+import {
+  Activity,
+  CloudSun,
+  Droplets,
+  LoaderCircle,
+  RotateCw,
+  Sparkles,
+  Thermometer,
+  Wind,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
   LineChart,
@@ -166,37 +175,50 @@ function App() {
   return (
     <main className="dashboard">
       <header className="topbar">
-        <div className="brand">🌿 Climate AI</div>
-        <span>Environmental Monitoring</span>
+        <div className="brand">
+          <span className="brand-mark"><CloudSun size={25} strokeWidth={1.8} /></span>
+          <span className="brand-name">Climate AI</span>
+        </div>
+        <div className="topbar-meta">
+          <span className="project-label">College EVS project</span>
+          <span className="topbar-divider" aria-hidden="true" />
+          <span className="monitoring-label"><Activity size={15} /> Environmental monitoring</span>
+        </div>
       </header>
 
       <section className="intro">
-        <p className="eyebrow">
-          SMART ENVIRONMENTAL INTELLIGENCE
-        </p>
+        <p className="eyebrow">FIELD NOTES · ATMOSPHERIC CONDITIONS</p>
         <h1>Understand your climate.</h1>
         <p>
-          Monitor environmental conditions and explore
-          temperature predictions.
+          Explore the measurements, see a formula-based estimate, and get an AI interpretation grounded in your data.
         </p>
       </section>
 
-      <section className="cards">
+      <section className="cards" aria-label="Illustrative environmental readings">
         <article className="card">
-          <span>🌡️ Current temperature</span>
-          <h2>28°C</h2>
+          <div className="metric-heading">
+            <span className="metric-icon temperature-icon"><Thermometer size={18} /></span>
+            <span>Current temperature</span>
+          </div>
+          <h2>28 <small>°C</small></h2>
           <small>Illustrative reading · Not live sensor data</small>
         </article>
 
         <article className="card">
-          <span>💧 Humidity</span>
-          <h2>65%</h2>
+          <div className="metric-heading">
+            <span className="metric-icon humidity-icon"><Droplets size={18} /></span>
+            <span>Humidity</span>
+          </div>
+          <h2>65 <small>%</small></h2>
           <small>Illustrative reading</small>
         </article>
 
         <article className="card">
-          <span>🌬️ Wind speed</span>
-          <h2>12 km/h</h2>
+          <div className="metric-heading">
+            <span className="metric-icon wind-icon"><Wind size={18} /></span>
+            <span>Wind speed</span>
+          </div>
+          <h2>12 <small>km/h</small></h2>
           <small>Illustrative reading</small>
         </article>
       </section>
@@ -210,7 +232,7 @@ function App() {
         <div className="chart">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={readings}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid stroke="rgba(67, 97, 150, 0.14)" strokeDasharray="4 5" />
               <XAxis dataKey="time" />
               <YAxis unit="°C" />
               <Tooltip />
@@ -218,9 +240,9 @@ function App() {
                 type="monotone"
                 dataKey="temp"
                 name="Temperature"
-                stroke="#168568"
+                stroke="#377DFF"
                 strokeWidth={3}
-                dot={{ r: 4 }}
+                dot={{ r: 4, fill: "#7657D9", stroke: "#fff", strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -310,7 +332,11 @@ function App() {
           onClick={predict}
           disabled={loading}
         >
-          {loading ? "Analyzing measurements..." : "Calculate estimate and analyze"}
+          {loading ? (
+            <><LoaderCircle className="button-spinner" size={17} /> Analyzing measurements...</>
+          ) : (
+            <><Sparkles size={17} /> Generate environmental insights</>
+          )}
         </button>
 
         {error && (
