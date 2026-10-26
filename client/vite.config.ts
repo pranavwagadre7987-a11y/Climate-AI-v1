@@ -7,7 +7,7 @@ const backendEnvDirectory = fileURLToPath(new URL('..', import.meta.url))
 
 export default defineConfig(({ mode }) => {
   const { PORT } = loadEnv(mode, backendEnvDirectory, 'PORT')
-  const backendPort = PORT || process.env.PORT || '5000'
+  const backendPort = Number(PORT || process.env.PORT) || 5000
 
   return {
     plugins: [react()],
